@@ -1,282 +1,272 @@
-import { useState } from 'react';
-import { StyleSheet,TextInput,TouchableOpacity,View,} from 'react-native';
-
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { TitleContent } from '@/components/title_contant';
+import { signup } from '@/services/firebase-auth';
+import { useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 type FormData = {
+  nickname: string;
   email: string;
   password: string;
   confirm: string;
 };
 
 type FormErrors = {
+  nickname: string;
   email: string;
   password: string[];
   confirm: string;
 };
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const [formData, setFormData] = useState<FormData>({
+    nickname: '',
     email: '',
     password: '',
     confirm: '',
   });
 
   const [formErrors, setFormErrors] = useState<FormErrors>({
+    nickname: '',
     email: '',
     password: [],
     confirm: '',
   });
 
   const onChange = (text: string, key: keyof FormData) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [key]: text,
-    }));
-
-    if (key === 'password') {
-      handlePasswordError(text);
-    }
-
-    if (key === 'confirm') {
-      handleConfirmError(text);
-    }
+    setFormData((prev) => ({ ...prev, [key]: text }));
+    if (key === 'nickname') handleNicknameError(text);
+    if (key === 'password') handlePasswordError(text);
+    if (key === 'confirm') handleConfirmError(text);
   };
 
   const onSubmit = () => {
+    const nicknameHasError = handleNicknameError(formData.nickname);
     const emailHasError = handleEmailError();
     const passwordHasError = formErrors.password.length > 0;
     const confirmHasError = formErrors.confirm.length > 0;
 
-    if (emailHasError || passwordHasError || confirmHasError) {
-      return;
-    }
+    if (nicknameHasError || emailHasError || passwordHasError || confirmHasError) return;
 
-    console.log('Form submitted successfully:', formData);
+    signup(formData.email, formData.password, formData.nickname);
+  };
+
+  const handleNicknameError = (text: string) => {
+    let error = '';
+    if (text.trim().length === 0) error = 'Le pseudo est obligatoire.';
+    else if (text.trim().length < 3) error = 'Minimum 3 caractères.';
+    setFormErrors((prev) => ({ ...prev, nickname: error }));
+    return error.length > 0;
   };
 
   const handleEmailError = () => {
     let error = '';
-
-    if (formData.email.length === 0) {
-      error = 'Email is required.';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      error = 'Email is invalid.';
-    }
-
-    setFormErrors((prevState) => ({
-      ...prevState,
-      email: error,
-    }));
-
+    if (formData.email.length === 0) error = "L'email est obligatoire.";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) error = "L'email n'est pas valide.";
+    setFormErrors((prev) => ({ ...prev, email: error }));
     return error.length > 0;
   };
 
   const handlePasswordError = (password: string) => {
     const errors: string[] = [];
-
-    if (password.length < 8) {
-      errors.push('Minimum 8 characters.');
-    }
-
-    if (!password.match(/[a-z]/)) {
-      errors.push('1 lowercase letter required.');
-    }
-
-    if (!password.match(/[A-Z]/)) {
-      errors.push('1 uppercase letter required.');
-    }
-
-    if (!password.match(/[0-9]/)) {
-      errors.push('1 number required.');
-    }
-
-    if (!password.match(/[^a-zA-Z0-9]/)) {
-      errors.push('1 special character required.');
-    }
-
-    setFormErrors((prevState) => ({
-      ...prevState,
-      password: errors,
-    }));
-
+    if (password.length < 8) errors.push('Minimum 8 caractères.');
+    if (!password.match(/[a-z]/)) errors.push('1 minuscule requise.');
+    if (!password.match(/[A-Z]/)) errors.push('1 majuscule requise.');
+    if (!password.match(/[0-9]/)) errors.push('1 chiffre requis.');
+    if (!password.match(/[^a-zA-Z0-9]/)) errors.push('1 caractère spécial requis.');
+    setFormErrors((prev) => ({ ...prev, password: errors }));
     return errors.length > 0;
   };
 
   const handleConfirmError = (text: string) => {
-    if (text !== formData.password) {
-      setFormErrors((prevState) => ({
-        ...prevState,
-        confirm: 'Passwords do not match.',
-      }));
-    } else {
-      setFormErrors((prevState) => ({
-        ...prevState,
-        confirm: '',
-      }));
-    }
+    const error = text !== formData.password ? 'Les mots de passe ne correspondent pas.' : '';
+    setFormErrors((prev) => ({ ...prev, confirm: error }));
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <TitleContent />
+    <KeyboardAvoidingView
+      style={styles.keyboardView}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* HEADER */}
+        <View style={styles.header}>
+          <TitleContent />
+        </View>
 
-      <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Email</ThemedText>
+        {/* FORM */}
+        <View style={styles.form}>
 
-        <TextInput
-          style={styles.formInput}
-          value={formData.email}
-          onChangeText={(text) => onChange(text, 'email')}
-          placeholder="Enter your email"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+          {/* NICKNAME */}
+          <View style={styles.formGroup}>
+            <ThemedText style={styles.label}>Pseudo</ThemedText>
+            <TextInput
+              style={styles.formInput}
+              value={formData.nickname}
+              onChangeText={(t) => onChange(t, 'nickname')}
+              placeholder="Choisissez un pseudo"
+              placeholderTextColor="#555"
+              autoCapitalize="none"
+            />
+            {!!formErrors.nickname && (
+              <ThemedText style={styles.errorText}>⚠ {formErrors.nickname}</ThemedText>
+            )}
+          </View>
 
-        {formErrors.email ? (
-          <ThemedText style={styles.errorText}>
-            {formErrors.email}
-          </ThemedText>
-        ) : null}
-      </View>
+          {/* EMAIL */}
+          <View style={styles.formGroup}>
+            <ThemedText style={styles.label}>Email</ThemedText>
+            <TextInput
+              style={styles.formInput}
+              value={formData.email}
+              onChangeText={(t) => onChange(t, 'email')}
+              placeholder="Enter your email"
+              placeholderTextColor="#555"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {!!formErrors.email && (
+              <ThemedText style={styles.errorText}>⚠ {formErrors.email}</ThemedText>
+            )}
+          </View>
 
-      <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Password</ThemedText>
+          {/* PASSWORD */}
+          <View style={styles.formGroup}>
+            <ThemedText style={styles.label}>Password</ThemedText>
+            <TextInput
+              style={styles.formInput}
+              value={formData.password}
+              onChangeText={(t) => onChange(t, 'password')}
+              placeholder="Enter your password"
+              placeholderTextColor="#555"
+              secureTextEntry
+            />
+            {formErrors.password.map((err, i) => (
+              <ThemedText key={i} style={styles.errorText}>⚠ {err}</ThemedText>
+            ))}
+          </View>
 
-        <TextInput
-          style={styles.formInput}
-          value={formData.password}
-          onChangeText={(text) => onChange(text, 'password')}
-          placeholder="Enter your password"
-          placeholderTextColor="#999"
-          secureTextEntry
-        />
+          {/* CONFIRM */}
+          <View style={styles.formGroup}>
+            <ThemedText style={styles.label}>Confirm Password</ThemedText>
+            <TextInput
+              style={styles.formInput}
+              value={formData.confirm}
+              onChangeText={(t) => onChange(t, 'confirm')}
+              placeholder="Confirm your password"
+              placeholderTextColor="#555"
+              secureTextEntry
+            />
+            {!!formErrors.confirm && (
+              <ThemedText style={styles.errorText}>⚠ {formErrors.confirm}</ThemedText>
+            )}
+          </View>
 
-        {formErrors.password.map((error, index) => (
-          <ThemedText key={index} style={styles.errorText}>
-            • {error}
-          </ThemedText>
-        ))}
-      </View>
+          {/* BUTTON */}
+          <TouchableOpacity style={styles.button} onPress={onSubmit} activeOpacity={0.8}>
+            <ThemedText style={styles.buttonText}>Create Account</ThemedText>
+          </TouchableOpacity>
 
-      <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>
-          Confirm Password
-        </ThemedText>
-
-        <TextInput
-          style={styles.formInput}
-          value={formData.confirm}
-          onChangeText={(text) => onChange(text, 'confirm')}
-          placeholder="Confirm your password"
-          placeholderTextColor="#999"
-          secureTextEntry
-        />
-
-        {formErrors.confirm ? (
-          <ThemedText style={styles.errorText}>
-            {formErrors.confirm}
-          </ThemedText>
-        ) : null}
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={onSubmit}>
-        <ThemedText style={styles.buttonText}>
-          Create Account
-        </ThemedText>
-      </TouchableOpacity>
-    </ThemedView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0D0D0D',
+  },
 
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
 
-    justifyContent: 'center',
+  header: {
+    backgroundColor: '#000000',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F72585',
+    alignItems: 'center',
+  },
+
+  form: {
+    padding: 24,
   },
 
   formGroup: {
-    width: '100%',
-    marginBottom: 24,
+    marginBottom: 20,
   },
 
   label: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#3A0CA3',
-
-    marginBottom: 10,
+    color: '#B8C0FF',
+    marginBottom: 8,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 
   formInput: {
     width: '100%',
-
-    backgroundColor: '#FFFFFF',
-
+    backgroundColor: '#1A1A2E',
     borderWidth: 2,
     borderColor: '#7209B7',
     borderRadius: 18,
-
     paddingVertical: 16,
     paddingHorizontal: 18,
-
-    color: '#3A0CA3',
-
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
-
-    shadowColor: '#F72585',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.12,
+    fontWeight: '500',
+    shadowColor: '#7209B7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-
     elevation: 5,
   },
 
   errorText: {
     color: '#F72585',
-    marginTop: 8,
-    fontSize: 13,
-    fontWeight: '500',
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    paddingLeft: 4,
   },
 
   button: {
-    backgroundColor: '#F72585',
-
+    backgroundColor: '#7209B7',
     paddingVertical: 18,
-
     borderRadius: 18,
-
     alignItems: 'center',
-
     marginTop: 10,
-
     shadowColor: '#F72585',
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
 
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 });
