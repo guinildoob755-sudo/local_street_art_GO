@@ -1,17 +1,27 @@
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import app from './firebase-config';
+import { createWithId } from './firebase-database';
+
 const auth = getAuth(app);
 
-export const signUp = async (email: string, password: string) => {
-    createUserWithEmailAndPassword(auth, email, password).then(function(userCredential) {
-        // Signed in 
-        const user = userCredential.user;
-        console.log('User created successfully:', user);
-        // ...
-    }   ).catch(function(error) {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error('Error creating user:', errorCode, errorMessage);
-        // ..
-    });
-}
+export default auth;
+
+export const signup = (email:string, password:string, nickname: string) => {
+  createUserWithEmailAndPassword(auth, email, password).then(function(result) {
+    console.log("./services/firebase-auth.ts - signup function", result);
+    const uid = result?.user?.uid;
+    if(uid) {
+      createWithId("users",uid, {uid: uid, nickname:  nickname})    
+    }
+  });
+};
+
+export const login = (email:string, password:string, nickname: string) => {
+  createUserWithEmailAndPassword(auth, email, password).then(function(result) {
+    console.log("./services/firebase-auth.ts - login function", result);
+    const uid = result?.user?.uid;
+    if(uid) {
+      createWithId("users",uid, {uid: uid, nickname:  nickname})    
+    }
+  });
+};

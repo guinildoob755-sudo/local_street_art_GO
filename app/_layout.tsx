@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react'; // ← ajoute cet import
+import { useEffect, useState } from 'react'; // ← ajoute cet import
 import auth from '../services/firebase-auth';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -17,13 +17,21 @@ export const unstable_settings = {
 };
 
 
-
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     'Betania': require('../assets/fonts/BetaniaPatmosGDL-Regular.ttf'),
   });
 
   const colorScheme = useColorScheme();
+
+  const [user, setUser] = useState<any | null>(null);
+useEffect(() => {
+    const unsub = onAuthStateChanged(auth, user_ => {
+      setUser(user_);
+    });
+    return unsub;
+  }, []);
+
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, user_ => {
@@ -47,7 +55,7 @@ export default function RootLayout() {
     
   }
 
-  
+
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

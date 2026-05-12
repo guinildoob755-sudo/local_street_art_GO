@@ -4,7 +4,6 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TitleContent } from '@/components/title_contant';
-import { Colors } from '@/constants/theme';
 import { Link } from 'expo-router';
 
 type FormData = {
@@ -201,14 +200,31 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   formInput: {
-    borderColor: Colors.light.text,
-    borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 10,
-    padding: 10,
-    width: 300,
-    color: Colors.light.text,
+  width: 300,
+  paddingVertical: 14,
+  paddingHorizontal: 16,
+  marginBottom: 14,
+
+  backgroundColor: "#FFFFFF",
+
+  borderWidth: 2,
+  borderColor: "#7209B7",
+  borderRadius: 16,
+
+  color: "#3A0CA3",
+  fontSize: 16,
+  fontWeight: "600",
+
+  shadowColor: "#F72585",
+  shadowOffset: {
+    width: 0,
+    height: 4,
   },
+  shadowOpacity: 0.15,
+  shadowRadius: 6,
+
+  elevation: 4,
+},
 
   loginButton: {
   backgroundColor: '#111',
