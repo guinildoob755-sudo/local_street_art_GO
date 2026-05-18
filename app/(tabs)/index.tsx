@@ -14,7 +14,7 @@ export default function HomeScreen() {
  
   // ✅ Avec Expo Router, on utilise le nom de la route, pas un chemin relatif
   const openHomePage = () => {
-    router.push('/');
+    router.push('/modal'); // Ouvre la page ModalScreen
   };
  
   return (
