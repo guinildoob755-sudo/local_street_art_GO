@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/themed-text';
 import { TitleContent } from '@/components/title_contant';
 import { signup } from '@/services/firebase-auth';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -27,6 +28,8 @@ type FormErrors = {
 };
 
 export default function SignupScreen() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormData>({
     nickname: '',
     email: '',
@@ -41,14 +44,19 @@ export default function SignupScreen() {
     confirm: '',
   });
 
+  // ✅ Nouvel état pour les erreurs Firebase
+  const [firebaseError, setFirebaseError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const onChange = (text: string, key: keyof FormData) => {
     setFormData((prev) => ({ ...prev, [key]: text }));
+    setFirebaseError(''); // reset erreur Firebase à chaque saisie
     if (key === 'nickname') handleNicknameError(text);
     if (key === 'password') handlePasswordError(text);
     if (key === 'confirm') handleConfirmError(text);
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     const nicknameHasError = handleNicknameError(formData.nickname);
     const emailHasError = handleEmailError();
     const passwordHasError = formErrors.password.length > 0;
@@ -56,7 +64,38 @@ export default function SignupScreen() {
 
     if (nicknameHasError || emailHasError || passwordHasError || confirmHasError) return;
 
-    signup(formData.email, formData.password, formData.nickname);
+    setFirebaseError('');
+
+    try {
+      setLoading(true);
+      await signup(formData.email, formData.password, formData.nickname);
+
+      // Redirection vers modal après inscription réussie
+      router.replace('/modal');
+
+    } catch (err: any) {
+      console.log('Erreur signup:', err.code);
+
+      // Messages d'erreur Firebase lisibles
+      switch (err.code) {
+        case 'auth/email-already-in-use':
+          setFirebaseError("Cet email est déjà utilisé. Connectez-vous ou utilisez un autre email.");
+          break;
+        case 'auth/invalid-email':
+          setFirebaseError("L'adresse email est invalide.");
+          break;
+        case 'auth/weak-password':
+          setFirebaseError("Mot de passe trop faible.");
+          break;
+        case 'auth/network-request-failed':
+          setFirebaseError("Erreur réseau. Vérifiez votre connexion.");
+          break;
+        default:
+          setFirebaseError("Une erreur est survenue. Réessayez.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNicknameError = (text: string) => {
@@ -132,7 +171,7 @@ export default function SignupScreen() {
               style={styles.formInput}
               value={formData.email}
               onChangeText={(t) => onChange(t, 'email')}
-              placeholder="Enter your email"
+              placeholder="Entrez votre email"
               placeholderTextColor="#555"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -144,12 +183,12 @@ export default function SignupScreen() {
 
           {/* PASSWORD */}
           <View style={styles.formGroup}>
-            <ThemedText style={styles.label}>Password</ThemedText>
+            <ThemedText style={styles.label}>Mot de passe</ThemedText>
             <TextInput
               style={styles.formInput}
               value={formData.password}
               onChangeText={(t) => onChange(t, 'password')}
-              placeholder="Enter your password"
+              placeholder="Entrez votre mot de passe"
               placeholderTextColor="#555"
               secureTextEntry
             />
@@ -160,12 +199,12 @@ export default function SignupScreen() {
 
           {/* CONFIRM */}
           <View style={styles.formGroup}>
-            <ThemedText style={styles.label}>Confirm Password</ThemedText>
+            <ThemedText style={styles.label}>Confirmer le mot de passe</ThemedText>
             <TextInput
               style={styles.formInput}
               value={formData.confirm}
               onChangeText={(t) => onChange(t, 'confirm')}
-              placeholder="Confirm your password"
+              placeholder="Confirmez votre mot de passe"
               placeholderTextColor="#555"
               secureTextEntry
             />
@@ -174,9 +213,21 @@ export default function SignupScreen() {
             )}
           </View>
 
+          {/* FIREBASE ERROR */}
+          {!!firebaseError && (
+            <ThemedText style={styles.firebaseError}>⚠ {firebaseError}</ThemedText>
+          )}
+
           {/* BUTTON */}
-          <TouchableOpacity style={styles.button} onPress={onSubmit} activeOpacity={0.8}>
-            <ThemedText style={styles.buttonText}>Create Account</ThemedText>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.6 }]}
+            onPress={onSubmit}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            <ThemedText style={styles.buttonText}>
+              {loading ? 'Création...' : 'Créer un compte'}
+            </ThemedText>
           </TouchableOpacity>
 
         </View>
@@ -186,8 +237,6 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-
-  
   keyboardView: {
     flex: 1,
     backgroundColor: '#0D0D0D',
@@ -208,7 +257,7 @@ const styles = StyleSheet.create({
   },
 
   form: {
-     padding: 20,
+    padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
@@ -218,6 +267,7 @@ const styles = StyleSheet.create({
 
   formGroup: {
     marginBottom: 20,
+    width: '100%',
   },
 
   label: {
@@ -257,12 +307,23 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
 
+  // ✅ Style distinct pour l'erreur Firebase (plus visible)
+  firebaseError: {
+    color: '#FF4444',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 10,
+  },
+
   button: {
     backgroundColor: '#7209B7',
     paddingVertical: 18,
     borderRadius: 18,
     alignItems: 'center',
     marginTop: 10,
+    width: '100%',
     shadowColor: '#F72585',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,

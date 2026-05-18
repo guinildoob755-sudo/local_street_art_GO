@@ -5,21 +5,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
+ 
 import { useRouter } from 'expo-router';
-
+ 
 export default function HomeScreen() {
-
-  const router = useRouter();
-
-  // Redirection vers index.tsx
+ 
+    const router = useRouter();
+ 
+  // ✅ Avec Expo Router, on utilise le nom de la route, pas un chemin relatif
   const openHomePage = () => {
-    router.push('../app/index.tsx');
+    router.push('/');
   };
-
+ 
   return (
     <View style={styles.container}>
-
+ 
       {/* Logo cliquable */}
       <TouchableOpacity onPress={openHomePage}>
         <Image
@@ -27,15 +27,15 @@ export default function HomeScreen() {
           style={styles.image}
         />
       </TouchableOpacity>
-
+ 
       <ThemedText style={styles.title}>
         Welcome to localstreetart
       </ThemedText>
-
+ 
     </View>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -43,14 +43,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
+ 
   image: {
     width: 220,
     height: 220,
     resizeMode: 'contain',
     marginBottom: 20,
   },
-
+ 
   title: {
     fontSize: 28,
     fontWeight: 'bold',
