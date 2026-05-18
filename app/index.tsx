@@ -64,7 +64,7 @@ export default function LoginScreen() {
     if (!validate()) return;
 
     try {
-      await (form.email, form.password);
+      await login (form.email, form.password);
     } catch (err) {
       console.log('Erreur login:', err);
     }
@@ -108,6 +108,7 @@ export default function LoginScreen() {
         <Pressable
           style={styles.button}
           onPress={handleLogin}
+
         >
           <ThemedText style={styles.buttonText}>
             Se connecter
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    backgroundColor: '#fff',
+    backgroundColor: '#000000',
   },
 
   formContainer: {

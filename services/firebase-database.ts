@@ -3,7 +3,7 @@ import app from './firebase-config';
 
 const database = getDatabase(app);
 
-// 🔥 Nettoie les undefined (obligatoire pour Firebase)
+//  Nettoie les undefined (obligatoire pour Firebase)
 const cleanData = (data: any) => {
   return Object.fromEntries(
     Object.entries(data).map(([key, value]) => [

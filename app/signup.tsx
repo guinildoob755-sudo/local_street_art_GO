@@ -186,6 +186,8 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
+
+  
   keyboardView: {
     flex: 1,
     backgroundColor: '#0D0D0D',
@@ -206,7 +208,12 @@ const styles = StyleSheet.create({
   },
 
   form: {
-    padding: 24,
+     padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginHorizontal: 20,
+    backgroundColor: '#1A1A2E',
   },
 
   formGroup: {
@@ -223,6 +230,7 @@ const styles = StyleSheet.create({
   },
 
   formInput: {
+    marginTop: 4,
     width: '100%',
     backgroundColor: '#1A1A2E',
     borderWidth: 2,
