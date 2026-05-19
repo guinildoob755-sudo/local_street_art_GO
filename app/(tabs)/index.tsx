@@ -1,17 +1,67 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View, Image, Pressable, FlatList, SafeAreaViewBase, StatusBar } from 'react-native';
-
-
-export default function ModalScreen() {
-  type Artwork = {
+import React, { useState } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+ 
+const { width } = Dimensions.get('window');
+ 
+// =====================
+// TYPES
+// =====================
+type Artwork = {
   id: string;
   photo: string;
   nickname: string;
   likes: number;
   liked: boolean;
 };
-
+ 
+// =====================
+// DONNÉES MOCK
+// =====================
+const INITIAL_ARTWORKS: Artwork[] = [
+  {
+    id: '1',
+    photo: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
+    nickname: 'Akira_draws',
+    likes: 142,
+    liked: false,
+  },
+  {
+    id: '2',
+    photo: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800',
+    nickname: 'NeonBrush',
+    likes: 89,
+    liked: true,
+  },
+  {
+    id: '3',
+    photo: 'https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=800',
+    nickname: 'PixelSoul',
+    likes: 217,
+    liked: false,
+  },
+  {
+    id: '4',
+    photo: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800',
+    nickname: 'VoidArtist',
+    likes: 54,
+    liked: false,
+  },
+];
+ 
+const TABS = ['TENDANCES', 'RÉCENTS', 'SUIVIS'];
+ 
 // =====================
 // ARTWORK CARD
 // =====================
@@ -25,6 +75,10 @@ function ArtworkCard({
   return (
     <View style={styles.card}>
       <Image source={{ uri: item.photo }} style={styles.cardImage} />
+ 
+      {/* Gradient overlay simulé */}
+      <View style={styles.cardOverlay} />
+ 
       <View style={styles.cardFooter}>
         <View style={styles.authorRow}>
           <View style={styles.avatar}>
@@ -34,11 +88,11 @@ function ArtworkCard({
           </View>
           <Text style={styles.nickname}>{item.nickname}</Text>
         </View>
-
+ 
         <TouchableOpacity
           style={[styles.likeButton, item.liked && styles.likeButtonActive]}
           onPress={() => onLike(item.id)}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
         >
           <Text style={styles.likeIcon}>{item.liked ? '♥' : '♡'}</Text>
           <Text style={[styles.likeCount, item.liked && styles.likeCountActive]}>
@@ -49,25 +103,83 @@ function ArtworkCard({
     </View>
   );
 }
-
-
-
+ 
+// =====================
+// ÉCRAN PRINCIPAL
+// =====================
+export default function HomeScreen() {
+  const [artworks, setArtworks] = useState<Artwork[]>(INITIAL_ARTWORKS);
+  const [activeTab, setActiveTab] = useState(0);
+ 
+  function handleLike(id: string) {
+    setArtworks((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? { ...a, liked: !a.liked, likes: a.liked ? a.likes - 1 : a.likes + 1 }
+          : a
+      )
+    );
+  }
+ 
   return (
-    <View style={styles.container}>
-
-      <Text style={styles.title}>Accueil</Text>
-
-      {/* BOUTON CAMERA → navigue vers /photo */}
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
+ 
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>ARTFLOW</Text>
+        <TouchableOpacity style={styles.headerIcon}>
+          <Ionicons name="notifications-outline" size={22} color="#F72585" />
+        </TouchableOpacity>
+      </View>
+ 
+      {/* TABS */}
+      <View style={styles.tabs}>
+        {TABS.map((tab, i) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === i && styles.tabActive]}
+            onPress={() => setActiveTab(i)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === i && styles.tabTextActive]}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+ 
+      {/* LISTE */}
+      <FlatList
+        data={artworks}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <ArtworkCard item={item} onLike={handleLike} />
+        )}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>
+              Aucune œuvre pour l'instant.{'\n'}Soyez le premier à partager !
+            </Text>
+          </View>
+        }
+      />
+ 
+      {/* BOUTON CAMÉRA */}
       <TouchableOpacity
         style={styles.cameraButton}
         onPress={() => router.push('/photo')}
+        activeOpacity={0.85}
       >
-        <Ionicons name="camera" size={40} color="#fff" />
+        <Ionicons name="camera" size={26} color="#fff" />
+        <Text style={styles.cameraButtonText}>CRÉER</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
-
+ 
 // =====================
 // STYLES
 // =====================
@@ -76,76 +188,95 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0D0D0D',
   },
-
+ 
   // HEADER
   header: {
-    backgroundColor: '#000',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F72585',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0D0D0D',
+    paddingVertical: 16,
+    paddingHorizontal: 22,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a1a1a',
   },
   headerTitle: {
     color: '#F72585',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    letterSpacing: 4,
   },
-
+  headerIcon: {
+    padding: 4,
+  },
+ 
   // TABS
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#111',
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: '#1e1e1e',
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#7209B7',
+    borderBottomColor: '#F72585',
   },
   tabText: {
-    color: '#555',
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    color: '#444',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.5,
   },
   tabTextActive: {
     color: '#fff',
   },
-
+ 
   // LIST
   list: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 110,
   },
-
+ 
   // CARD
   card: {
-    backgroundColor: '#1A1A2E',
-    borderRadius: 16,
+    backgroundColor: '#141420',
+    borderRadius: 20,
     marginBottom: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#2a2a3e',
+    borderColor: '#222236',
+    shadowColor: '#F72585',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   cardImage: {
     width: '100%',
-    height: 220,
+    height: 240,
     resizeMode: 'cover',
+  },
+  cardOverlay: {
+    position: 'absolute',
+    bottom: 56,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: 'transparent',
+    // simule un fondu vers le bas
   },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#141420',
   },
   authorRow: {
     flexDirection: 'row',
@@ -153,24 +284,27 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#7209B7',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#F72585',
   },
   avatarText: {
     color: '#fff',
-    fontWeight: '800',
+    fontWeight: '900',
     fontSize: 15,
   },
   nickname: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: '#e0e0e0',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
-
+ 
   // LIKE BUTTON
   likeButton: {
     flexDirection: 'row',
@@ -178,58 +312,62 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#0D0D0D',
     paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    borderRadius: 50,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#2a2a2a',
   },
   likeButtonActive: {
-    backgroundColor: '#2a0040',
+    backgroundColor: '#1a0028',
     borderColor: '#F72585',
   },
   likeIcon: {
     color: '#F72585',
-    fontSize: 18,
+    fontSize: 17,
   },
   likeCount: {
-    color: '#888',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '700',
   },
   likeCountActive: {
     color: '#F72585',
   },
-
+ 
   // EMPTY STATE
   empty: {
     alignItems: 'center',
-    marginTop: 60,
+    marginTop: 80,
   },
   emptyText: {
-    color: '#444',
+    color: '#333',
     fontSize: 15,
     textAlign: 'center',
+    lineHeight: 24,
   },
-
-  // ADD BUTTON
-  addButton: {
+ 
+  // BOUTON CAMÉRA
+  cameraButton: {
     position: 'absolute',
-    bottom: 28,
+    bottom: 30,
     alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     backgroundColor: '#7209B7',
     paddingVertical: 16,
-    paddingHorizontal: 48,
+    paddingHorizontal: 40,
     borderRadius: 50,
     shadowColor: '#F72585',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 14,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 12,
   },
-  addButtonText: {
+  cameraButtonText: {
     color: '#fff',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 1,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
 });
