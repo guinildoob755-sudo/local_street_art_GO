@@ -1,41 +1,23 @@
-import { ThemedText } from '@/components/themed-text';
-import {
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
- 
-import { useRouter } from 'expo-router';
- 
-export default function HomeScreen() {
- 
-    const router = useRouter();
- 
-  // ✅ Avec Expo Router, on utilise le nom de la route, pas un chemin relatif
-  const openHomePage = () => {
-    router.push('/modal'); // Ouvre la page ModalScreen
-  };
- 
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+export default function ModalScreen() {
   return (
     <View style={styles.container}>
- 
-      {/* Logo cliquable */}
-      <TouchableOpacity onPress={openHomePage}>
-        <Image
-          source={require('@/assets/images/logo_art.png')}
-          style={styles.image}
-        />
+      <Text style={styles.title}>Accueil</Text>
+
+      {/* BOUTON CAMERA → navigue vers /photo */}
+      <TouchableOpacity
+        style={styles.cameraButton}
+        onPress={() => router.push('/photo')}
+      >
+        <Ionicons name="camera" size={40} color="#fff" />
       </TouchableOpacity>
- 
-      <ThemedText style={styles.title}>
-        Welcome to localstreetart
-      </ThemedText>
- 
     </View>
   );
 }
- 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -43,17 +25,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
- 
-  image: {
-    width: 220,
-    height: 220,
-    resizeMode: 'contain',
-    marginBottom: 20,
-  },
- 
+
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#F72585',
+    marginBottom: 40,
+  },
+
+  cameraButton: {
+    backgroundColor: '#7209B7',
+    padding: 24,
+    borderRadius: 50,
+    shadowColor: '#F72585',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
+    elevation: 10,
   },
 });

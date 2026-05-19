@@ -87,7 +87,7 @@ export default function LoginScreen() {
       }
  
       // Redirection vers modal.tsx
-      router.replace('/modal');
+      router.replace('/(tabs)');
  
     } catch (err: any) {
       console.log('Erreur login:', err);
