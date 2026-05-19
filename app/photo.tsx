@@ -1,9 +1,11 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import storage from '@react-native-firebase/storage';
+
  
 export default function Photo() {
-  // ✅ TYPE CORRIGÉ ICI (IMPORTANT)
+  
   const cameraRef = useRef<CameraView | null>(null);
  
   const [permission, requestPermission] = useCameraPermissions();
@@ -102,7 +104,7 @@ const styles = StyleSheet.create({
  
   publish: {
     marginTop: 20,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#730ae3",
     padding: 15,
     borderRadius: 10,
   },

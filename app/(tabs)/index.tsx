@@ -31,29 +31,8 @@ type Artwork = {
 // =====================
 const INITIAL_ARTWORKS: Artwork[] = [
   {
-    id: '1',
-    photo: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
-    nickname: 'Akira_draws',
-    likes: 142,
-    liked: false,
-  },
-  {
-    id: '2',
-    photo: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800',
-    nickname: 'NeonBrush',
-    likes: 89,
-    liked: true,
-  },
-  {
-    id: '3',
-    photo: 'https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=800',
-    nickname: 'PixelSoul',
-    likes: 217,
-    liked: false,
-  },
-  {
     id: '4',
-    photo: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800',
+    photo: 'https://www.pop-plainecommune.com/decouvrir/les-incontournables/la-street-art-avenue/',
     nickname: 'VoidArtist',
     likes: 54,
     liked: false,
