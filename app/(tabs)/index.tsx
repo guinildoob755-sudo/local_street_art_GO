@@ -30,13 +30,6 @@ type Artwork = {
 // DONNÉES MOCK
 // =====================
 const INITIAL_ARTWORKS: Artwork[] = [
-  {
-    id: '4',
-    photo: 'https://www.pop-plainecommune.com/decouvrir/les-incontournables/la-street-art-avenue/',
-    nickname: 'VoidArtist',
-    likes: 54,
-    liked: false,
-  },
 ];
  
 const TABS = ['TENDANCES', 'RÉCENTS', 'SUIVIS'];
