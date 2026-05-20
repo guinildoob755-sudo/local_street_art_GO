@@ -71,7 +71,7 @@ export default function SignupScreen() {
       await signup(formData.email, formData.password, formData.nickname);
 
       // Redirection vers modal après inscription réussie
-      router.replace('/modal');
+      router.replace('/(tabs)');
 
     } catch (err: any) {
       console.log('Erreur signup:', err.code);

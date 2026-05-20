@@ -1,11 +1,16 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+
+import { logout } from '@/services/firebase-auth';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function TabThreeScreen() {
+  const router = useRouter();
+
   const user = {
     name: 'Yes.guy🇦🇴',
     email: 'guy.17.06@gmail.com',
@@ -13,9 +18,16 @@ export default function TabThreeScreen() {
     likes: 84,
   };
 
-  const handleLogout = () => {
-    console.log('Logout');
-    // ici tu pourras ajouter Firebase signOut plus tard
+  const handleLogout = async () => {
+    try {
+      await logout();
+      console.log('User logged out');
+
+      // redirection après déconnexion
+      router.replace('/'); // ou '/'
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -25,16 +37,18 @@ export default function TabThreeScreen() {
         <ThemedText type="title">Profile</ThemedText>
 
         <Pressable onPress={handleLogout} style={styles.logoutBtn}>
-          <IconSymbol name="rectangle.portrait.and.arrow.right" size={20} color="#f72585" />
+          <IconSymbol
+            name="rectangle.portrait.and.arrow.right"
+            size={20}
+            color="#f72585"
+          />
           <ThemedText type="link">Logout</ThemedText>
         </Pressable>
       </ThemedView>
 
       {/* AVATAR */}
       <Image
-        source={{
-          uri: 'https://i.pravatar.cc/300',
-        }}
+        source={{ uri: 'https://i.pravatar.cc/300' }}
         style={styles.avatar}
       />
 
@@ -49,13 +63,17 @@ export default function TabThreeScreen() {
       <ThemedView style={styles.statsContainer}>
         <ThemedView style={styles.statBox}>
           <IconSymbol name="camera.fill" size={22} color="#7209b7" />
-          <ThemedText type="defaultSemiBold">{user.artworks}</ThemedText>
+          <ThemedText type="defaultSemiBold">
+            {user.artworks}
+          </ThemedText>
           <ThemedText>Artworks</ThemedText>
         </ThemedView>
 
         <ThemedView style={styles.statBox}>
           <IconSymbol name="heart.fill" size={22} color="#f72585" />
-          <ThemedText type="defaultSemiBold">{user.likes}</ThemedText>
+          <ThemedText type="defaultSemiBold">
+            {user.likes}
+          </ThemedText>
           <ThemedText>Likes</ThemedText>
         </ThemedView>
       </ThemedView>

@@ -99,7 +99,7 @@ export default function HomeScreen() {
  
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>ARTFLOW</Text>
+        <Text style={styles.headerTitle}> localS-treet-Art</Text>
         <TouchableOpacity style={styles.headerIcon}>
           <Ionicons name="notifications-outline" size={22} color="#F72585" />
         </TouchableOpacity>

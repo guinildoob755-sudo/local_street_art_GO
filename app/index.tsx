@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TitleContent } from '@/components/title_contant';
+import { Stack } from 'expo-router';
  
 import { login } from '@/services/firebase-auth';
 import { getAuth } from 'firebase/auth';
@@ -175,6 +176,18 @@ export default function LoginScreen() {
             </ThemedText>
           </Pressable>
         </Link>
+
+        <>
+<Stack.Screen
+    options={{
+      headerShown: false,
+    }}
+  />
+
+  <ThemedView style={styles.container}>
+    {/* contenu */}
+  </ThemedView>
+</>
  
       </View>
     </ThemedView>
