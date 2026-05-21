@@ -1,58 +1,54 @@
 import { Image } from 'expo-image';
+import { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet } from 'react-native';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { getAll } from '@/services/firebase-database';
 
-const artworks = [
-  {
-    id: 1,
-    artist: 'Yes.guy🇦🇴',
-    likes: 128,
-    image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200',
-    latitude: 48.8566,
-    longitude: 2.3522,
-  },
-  {
-    id: 2,
-    artist: 'StreetFlow',
-    likes: 92,
-    image:
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200',
-    latitude: 48.8606,
-    longitude: 2.3376,
-  },
-];
+
+type Artwork = {
+  url: string;
+  uid: string;
+  createdAt: number;
+  lat?: number;
+  lng?: number;
+};
 
 export default function ExploreScreen() {
-  const openMap = (lat: number, lng: number) => {
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
+
+  useEffect(() => {
+    loadArtworks();
+  }, []);
+  
+
+  async function loadArtworks() {
+    try {
+      const data = await getAll('artworks');
+      setArtworks(data);
+    } catch (err) {
+      console.error('Failed to load artworks:', err);
+    }
+  }
+
+  const openMap = (lat?: number, lng?: number) => {
+    if (!lat || !lng) return;
     const url = Platform.select({
       ios: `maps:${lat},${lng}`,
       android: `geo:${lat},${lng}`,
       default: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
     });
-
-    if (url) {
-      Linking.openURL(url);
-    }
+    if (url) Linking.openURL(url);
   };
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{
-        light: '#f72585',
-        dark: '#3a0ca3',
-      }}
+      headerBackgroundColor={{ light: '#f72585', dark: '#3a0ca3' }}
       headerImage={
-        <IconSymbol
-          size={280}
-          color="#ffffff40"
-          name="map.fill"
-          style={styles.headerImage}
-        />
+        <IconSymbol size={280} color="#ffffff40" name="map.fill" style={styles.headerImage} />
       }>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Explore Street Art</ThemedText>
@@ -62,33 +58,25 @@ export default function ExploreScreen() {
         Discover graffiti and urban artworks around the city.
       </ThemedText>
 
-      {artworks.map((artwork) => (
-        <Pressable
-          key={artwork.id}
-          style={styles.card}
-          onPress={() => openMap(artwork.latitude, artwork.longitude)}>
-          <Image
-            source={{ uri: artwork.image }}
-            style={styles.image}
-            contentFit="cover"
-          />
+      {artworks.length === 0 && (
+        <ThemedText style={styles.empty}>Aucune œuvre pour l'instant.</ThemedText>
+      )}
 
+      {artworks.map((artwork, index) => (
+        <Pressable
+          key={artwork.createdAt?.toString() ?? index.toString()}
+          style={styles.card}
+          onPress={() => openMap(artwork.lat, artwork.lng)}
+        >
+          <Image source={{ uri: artwork.url }} style={styles.image} contentFit="cover" />
           <ThemedView style={styles.cardContent}>
             <ThemedView style={styles.artistRow}>
               <IconSymbol name="person.fill" size={18} color="#f72585" />
-              <ThemedText type="defaultSemiBold">
-                {artwork.artist}
-              </ThemedText>
+              <ThemedText type="defaultSemiBold">{artwork.uid}</ThemedText>
             </ThemedView>
-
-            <ThemedView style={styles.likeRow}>
-              <IconSymbol name="heart.fill" size={18} color="#f72585" />
-              <ThemedText>{artwork.likes} likes</ThemedText>
-            </ThemedView>
-
-            <ThemedText style={styles.mapText}>
-              Tap to open location
-            </ThemedText>
+            {artwork.lat && artwork.lng && (
+              <ThemedText style={styles.mapText}>Tap to open location</ThemedText>
+            )}
           </ThemedView>
         </Pressable>
       ))}
@@ -97,61 +85,17 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
-
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 20,
-  },
-
+  headerImage: { bottom: -90, left: -35, position: 'absolute' },
+  titleContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  subtitle: { fontSize: 16, opacity: 0.7, marginBottom: 20 },
+  empty: { textAlign: 'center', opacity: 0.4, marginTop: 40 },
   card: {
-    marginBottom: 20,
-    borderRadius: 22,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 20, borderRadius: 22, overflow: 'hidden',
+    backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.1,
+    shadowRadius: 8, elevation: 4,
   },
-
-  image: {
-    width: '100%',
-    height: 240,
-  },
-
-  cardContent: {
-    padding: 16,
-    gap: 10,
-  },
-
-  artistRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-
-  likeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-
-  mapText: {
-    color: '#7209b7',
-    marginTop: 6,
-    fontWeight: '600',
-  },
+  image: { width: '100%', height: 240 },
+  cardContent: { padding: 16, gap: 10 },
+  artistRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  mapText: { color: '#7209b7', marginTop: 6, fontWeight: '600' },
 });

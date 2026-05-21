@@ -44,13 +44,12 @@ export default function SignupScreen() {
     confirm: '',
   });
 
-  // ✅ Nouvel état pour les erreurs Firebase
   const [firebaseError, setFirebaseError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onChange = (text: string, key: keyof FormData) => {
     setFormData((prev) => ({ ...prev, [key]: text }));
-    setFirebaseError(''); // reset erreur Firebase à chaque saisie
+    setFirebaseError('');
     if (key === 'nickname') handleNicknameError(text);
     if (key === 'password') handlePasswordError(text);
     if (key === 'confirm') handleConfirmError(text);
@@ -69,14 +68,9 @@ export default function SignupScreen() {
     try {
       setLoading(true);
       await signup(formData.email, formData.password, formData.nickname);
-
-      // Redirection vers modal après inscription réussie
       router.replace('/(tabs)');
-
     } catch (err: any) {
       console.log('Erreur signup:', err.code);
-
-      // Messages d'erreur Firebase lisibles
       switch (err.code) {
         case 'auth/email-already-in-use':
           setFirebaseError("Cet email est déjà utilisé. Connectez-vous ou utilisez un autre email.");
@@ -241,12 +235,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0D0D0D',
   },
-
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 40,
   },
-
   header: {
     backgroundColor: '#000000',
     paddingVertical: 24,
@@ -255,7 +247,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F72585',
     alignItems: 'center',
   },
-
   form: {
     padding: 20,
     alignItems: 'center',
@@ -264,12 +255,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     backgroundColor: '#1A1A2E',
   },
-
   formGroup: {
     marginBottom: 20,
     width: '100%',
   },
-
   label: {
     fontSize: 13,
     fontWeight: '700',
@@ -278,7 +267,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-
   formInput: {
     marginTop: 4,
     width: '100%',
@@ -297,7 +285,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-
   errorText: {
     color: '#F72585',
     marginTop: 6,
@@ -306,8 +293,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     paddingLeft: 4,
   },
-
-  // ✅ Style distinct pour l'erreur Firebase (plus visible)
   firebaseError: {
     color: '#FF4444',
     fontSize: 13,
@@ -316,7 +301,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 10,
   },
-
   button: {
     backgroundColor: '#7209B7',
     paddingVertical: 18,
@@ -330,7 +314,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
