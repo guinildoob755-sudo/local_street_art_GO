@@ -1,13 +1,13 @@
-// Import Ionicons icons from Expo
+// Import Ionicons icon library from Expo
 import { Ionicons } from '@expo/vector-icons';
 
-// Import Expo Router for navigation
+// Import router for screen navigation
 import { router } from 'expo-router';
 
 // Import React and hooks
 import React, { useState, useEffect } from 'react';
 
-// Import React Native components and utilities
+// Import React Native components and APIs
 import {
   Dimensions,
   FlatList,
@@ -22,65 +22,43 @@ import {
   View,
 } from 'react-native';
 
-// Import Redux hook to access global state
+// Import Redux hook
 import { useSelector } from 'react-redux';
 
-// Import RootState type from Redux store
+// Import RootState type for Redux typing
 import { RootState } from '@/services/store';
 
-// Import Firebase helper function
+// Import Firebase database helper
 import { getAll } from '@/services/firebase-database';
 
 // Get device screen width
 const { width } = Dimensions.get('window');
 
 /**
- * Artwork Type
- *
- * Represents an artwork object displayed in the feed.
+ * Artwork object structure
  */
 type Artwork = {
-  // Unique artwork identifier
   id: string;
-
-  // Artwork image URL
   url: string;
-
-  // Artist/user identifier
   uid: string;
-
-  // Artwork creation timestamp
+  nickname: string;
   createdAt: number;
-
-  // Optional GPS latitude
   lat?: number;
-
-  // Optional GPS longitude
   lng?: number;
-
-  // Number of likes
   likes: number;
-
-  // Like state for the current user
   liked: boolean;
-
-  // Optional artwork description
   description?: string;
 };
 
 /**
- * Navigation tabs
+ * Available tabs displayed at the top
  */
 const TABS = ['TENDANCES', 'RÉCENTS', 'SUIVIS'];
 
 /**
- * ArtworkCard Component
- *
- * Displays a single artwork card with:
- * - Image
- * - Artist information
- * - Location
- * - Like button
+ * Artwork card component
+ * Displays one artwork with image, author info,
+ * description, location, and like button.
  */
 function ArtworkCard({
   item,
@@ -91,24 +69,21 @@ function ArtworkCard({
 }) {
 
   /**
-   * openMap()
-   *
-   * Opens the artwork location in the device map application.
+   * Open artwork location in maps application
    */
   const openMap = () => {
-    // Prevent opening if location is unavailable
+
+    // Stop if no coordinates exist
     if (!item.lat || !item.lng) return;
 
-    /**
-     * Generate a platform-specific map URL
-     */
+    // Generate platform-specific map URL
     const url = Platform.select({
       ios: `maps:${item.lat},${item.lng}`,
       android: `geo:${item.lat},${item.lng}`,
       default: `https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}`,
     });
 
-    // Open the map application
+    // Open map application
     if (url) Linking.openURL(url);
   };
 
@@ -116,44 +91,58 @@ function ArtworkCard({
     <View style={styles.card}>
 
       {/* Artwork image */}
-      <Image
-        source={{ uri: item.url }}
-        style={styles.cardImage}
-      />
+      <Image source={{ uri: item.url }} style={styles.cardImage} />
 
-      {/* Gradient/overlay effect */}
+      {/* Description badge */}
+      {item.description ? (
+        <View style={styles.descriptionBadge}>
+          <Text style={styles.descriptionText}>
+            {item.description}
+          </Text>
+        </View>
+      ) : null}
+
+      {/* Dark overlay for better readability */}
       <View style={styles.cardOverlay} />
 
       {/* Footer section */}
       <View style={styles.cardFooter}>
 
-        {/* Artist section */}
+        {/* Author information */}
         <View style={styles.authorRow}>
 
-          {/* Artist avatar */}
+          {/* Avatar */}
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {item.uid ? item.uid.charAt(0).toUpperCase() : '?'}
+              {item.nickname
+                ? item.nickname.charAt(0).toUpperCase()
+                : '?'}
             </Text>
           </View>
 
-          {/* Artist information */}
+          {/* Nickname and location */}
           <View>
+
+            {/* User nickname */}
             <Text style={styles.nickname}>
-              {item.uid}
+              {item.nickname}
             </Text>
 
-            {/* Artwork location */}
+            {/* Location display */}
             {item.lat && item.lng ? (
+
               <TouchableOpacity onPress={openMap}>
                 <Text style={styles.location}>
                   📍 {item.lat.toFixed(4)}, {item.lng.toFixed(4)}
                 </Text>
               </TouchableOpacity>
+
             ) : (
+
               <Text style={styles.noLocation}>
-                📍 No location available
+                📍 Pas de localisation
               </Text>
+
             )}
           </View>
         </View>
@@ -167,12 +156,13 @@ function ArtworkCard({
           onPress={() => onLike(item.id)}
           activeOpacity={0.75}
         >
+
           {/* Heart icon */}
           <Text style={styles.likeIcon}>
             {item.liked ? '♥' : '♡'}
           </Text>
 
-          {/* Like count */}
+          {/* Likes count */}
           <Text
             style={[
               styles.likeCount,
@@ -188,96 +178,79 @@ function ArtworkCard({
 }
 
 /**
- * HomeScreen Component
- *
- * Main application feed displaying artworks uploaded by users.
- *
- * Features:
- * - Artwork feed
- * - Like system
- * - Location opening
- * - Category tabs
- * - Camera navigation
+ * Main Home Screen component
  */
 export default function HomeScreen() {
 
-  /**
-   * artworks state
-   *
-   * Stores all fetched artworks.
-   */
+  // Store artworks list
   const [artworks, setArtworks] = useState<Artwork[]>([]);
 
-  /**
-   * activeTab state
-   *
-   * Stores the selected tab index.
-   */
+  // Store selected tab index
   const [activeTab, setActiveTab] = useState(0);
 
-  /**
-   * Current authenticated user ID from Redux
-   */
-  const uid = useSelector(
-    (state: RootState) => state.user.uid
-  );
+  // Get current user UID from Redux store
+  const uid = useSelector((state: RootState) => state.user.uid);
 
   /**
-   * Load artworks whenever the user changes.
+   * Load artworks when user changes
    */
   useEffect(() => {
     loadImages({ uid });
   }, [uid]);
 
   /**
-   * Parameters type for loadImages()
+   * Parameters for loading images
    */
   interface LoadImagesParams {
     uid: string;
   }
 
   /**
-   * loadImages()
-   *
-   * Fetches artworks from Firebase database
-   * and formats them for the feed.
+   * Fetch artworks and users from Firebase
    */
   async function loadImages({ uid }: LoadImagesParams) {
     try {
-      // Retrieve artworks collection
+
+      // Retrieve all artworks
       const data = await getAll('artworks');
 
+      // Retrieve all users
+      const users = await getAll('users');
+
       /**
-       * Format Firebase data
+       * Create a map:
+       * uid => nickname
+       */
+      const usersMap: Record<string, string> = {};
+
+      users.forEach((u: any) => {
+        usersMap[u.uid] = u.nickname;
+      });
+
+      /**
+       * Format artworks data
        */
       const formatted: Artwork[] = data.map(
         (item: any, index: number) => ({
           id: item.createdAt?.toString() ?? index.toString(),
-
-          // Support both "url" and "photo" fields
           url: item.url ?? item.photo ?? '',
-
           uid: item.uid,
+          nickname: usersMap[item.uid] ?? 'Anonyme',
           createdAt: item.createdAt,
-
           lat: item.lat ?? null,
           lng: item.lng ?? null,
-
-          // Default like values
           likes: 0,
           liked: false,
-
-          // Artwork description
           description: item.description ?? '',
         })
       );
 
-      // Update state
+      // Save artworks into state
       setArtworks(formatted);
 
     } catch (err) {
 
-      // Error handling
+      // Log loading errors
       console.error(
         'Failed to load images on Home screen:',
         err
@@ -286,13 +259,10 @@ export default function HomeScreen() {
   }
 
   /**
-   * handleLike()
-   *
-   * Toggles the like state for an artwork.
-   *
-   * @param id - Artwork ID
+   * Handle artwork like toggle
    */
   function handleLike(id: string) {
+
     setArtworks((prev) =>
       prev.map((a) =>
         a.id === id
@@ -320,12 +290,12 @@ export default function HomeScreen() {
       {/* HEADER */}
       <View style={styles.header}>
 
-        {/* App title */}
+        {/* Application title */}
         <Text style={styles.headerTitle}>
           localS-treet-Art
         </Text>
 
-        {/* Notifications button */}
+        {/* Notification button */}
         <TouchableOpacity style={styles.headerIcon}>
           <Ionicons
             name="notifications-outline"
@@ -335,9 +305,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* NAVIGATION TABS */}
+      {/* TABS */}
       <View style={styles.tabs}>
+
         {TABS.map((tab, i) => (
+
           <TouchableOpacity
             key={tab}
             style={[
@@ -347,11 +319,12 @@ export default function HomeScreen() {
             onPress={() => setActiveTab(i)}
             activeOpacity={0.8}
           >
+
+            {/* Tab label */}
             <Text
               style={[
                 styles.tabText,
-                activeTab === i &&
-                  styles.tabTextActive,
+                activeTab === i && styles.tabTextActive,
               ]}
             >
               {tab}
@@ -360,46 +333,28 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* ARTWORK LIST */}
+      {/* ARTWORKS LIST */}
       <FlatList
         data={artworks}
-
-        // Unique key for each item
         keyExtractor={(item) => item.id}
-
         contentContainerStyle={styles.list}
-
         showsVerticalScrollIndicator={false}
 
-        /**
-         * Render artwork card
-         */
+        // Render artwork card
         renderItem={({ item }) => (
-          <>
-            <ArtworkCard
-              item={item}
-              onLike={handleLike}
-            />
-
-            {/* Artwork description badge */}
-            {item.description ? (
-              <View style={styles.descriptionBadge}>
-                <Text style={styles.descriptionText}>
-                  {item.description}
-                </Text>
-              </View>
-            ) : null}
-          </>
+          <ArtworkCard
+            item={item}
+            onLike={handleLike}
+          />
         )}
 
-        /**
-         * Empty state UI
-         */
+        // Empty state
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
-              No artworks available yet.{'\n'}
-              Be the first to share!
+              Aucune œuvre pour l'instant.
+              {'\n'}
+              Soyez le premier à partager !
             </Text>
           </View>
         }
@@ -409,19 +364,22 @@ export default function HomeScreen() {
       <TouchableOpacity
         style={styles.cameraButton}
 
-        // Navigate to photo upload screen
-        onPress={() => router.push('/photo')}
+        // Navigate to camera screen
+        onPress={() => router.push('/camera')}
 
         activeOpacity={0.85}
       >
+
+        {/* Camera icon */}
         <Ionicons
           name="camera"
           size={26}
           color="#fff"
         />
 
+        {/* Button label */}
         <Text style={styles.cameraButtonText}>
-          CREATE
+          CRÉER
         </Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -433,28 +391,25 @@ export default function HomeScreen() {
  */
 const styles = StyleSheet.create({
 
-  // Main container
+  // Main screen container
   safe: {
     flex: 1,
     backgroundColor: '#0D0D0D',
   },
 
-  // Header container
+  // Header style
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
     backgroundColor: '#0D0D0D',
-
     paddingVertical: 16,
     paddingHorizontal: 22,
-
     borderBottomWidth: 1,
     borderBottomColor: '#1a1a1a',
   },
 
-  // App title
+  // Header title style
   headerTitle: {
     color: '#F72585',
     fontSize: 24,
@@ -462,21 +417,20 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
 
-  // Notification icon container
+  // Notification icon style
   headerIcon: {
     padding: 4,
   },
 
-  // Tabs container
+  // Tabs container style
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#111',
-
     borderBottomWidth: 1,
     borderBottomColor: '#1e1e1e',
   },
 
-  // Single tab
+  // Single tab style
   tab: {
     flex: 1,
     paddingVertical: 14,
@@ -489,7 +443,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F72585',
   },
 
-  // Default tab text
+  // Tab text style
   tabText: {
     color: '#444',
     fontSize: 11,
@@ -497,70 +451,58 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  // Active tab text
+  // Active tab text style
   tabTextActive: {
     color: '#fff',
   },
 
-  // Feed list container
+  // List style
   list: {
     padding: 16,
     paddingBottom: 110,
   },
 
-  // Artwork card
+  // Artwork card style
   card: {
     backgroundColor: '#141420',
     borderRadius: 20,
-
     marginBottom: 20,
-
     overflow: 'hidden',
-
     borderWidth: 1,
     borderColor: '#222236',
-
     shadowColor: '#F72585',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
-
     elevation: 6,
   },
 
-  // Description badge
-  descriptionBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-
-    backgroundColor: 'rgba(0,0,0,0.6)',
-
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-
-    borderRadius: 10,
-    maxWidth: '80%',
-  },
-
-  // Description text
-  descriptionText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-
-  // Artwork image
+  // Artwork image style
   cardImage: {
     width: '100%',
     height: 240,
     resizeMode: 'cover',
   },
 
-  // Overlay effect
+  // Description badge style
+  descriptionBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    maxWidth: '80%',
+  },
+
+  // Description text style
+  descriptionText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+
+  // Overlay style
   cardOverlay: {
     position: 'absolute',
     bottom: 56,
@@ -570,48 +512,43 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
 
-  // Card footer
+  // Card footer style
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
     paddingHorizontal: 16,
     paddingVertical: 14,
-
     backgroundColor: '#141420',
   },
 
-  // Artist section row
+  // Author row style
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
 
-  // Avatar container
+  // Avatar style
   avatar: {
     width: 38,
     height: 38,
     borderRadius: 19,
-
     backgroundColor: '#7209B7',
-
     alignItems: 'center',
     justifyContent: 'center',
-
     borderWidth: 2,
     borderColor: '#F72585',
   },
 
-  // Avatar text
+  // Avatar text style
   avatarText: {
     color: '#fff',
     fontWeight: '900',
     fontSize: 15,
   },
 
-  // Username text
+  // Nickname text style
   nickname: {
     color: '#e0e0e0',
     fontSize: 14,
@@ -619,57 +556,53 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Location text
+  // Location text style
   location: {
     color: '#F72585',
     fontSize: 11,
     marginTop: 2,
   },
 
-  // Missing location text
+  // No location text style
   noLocation: {
     color: '#444',
     fontSize: 11,
     marginTop: 2,
   },
 
-  // Like button
+  // Like button style
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-
     backgroundColor: '#0D0D0D',
-
     paddingVertical: 8,
     paddingHorizontal: 16,
-
     borderRadius: 50,
-
     borderWidth: 1,
     borderColor: '#2a2a2a',
   },
 
-  // Active like button
+  // Active like button style
   likeButtonActive: {
     backgroundColor: '#1a0028',
     borderColor: '#F72585',
   },
 
-  // Heart icon
+  // Heart icon style
   likeIcon: {
     color: '#F72585',
     fontSize: 17,
   },
 
-  // Like count
+  // Likes count style
   likeCount: {
     color: '#666',
     fontSize: 13,
     fontWeight: '700',
   },
 
-  // Active like count
+  // Active likes count style
   likeCountActive: {
     color: '#F72585',
   },
@@ -693,27 +626,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     alignSelf: 'center',
-
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-
     backgroundColor: '#7209B7',
-
     paddingVertical: 16,
     paddingHorizontal: 40,
-
     borderRadius: 50,
-
     shadowColor: '#F72585',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.55,
     shadowRadius: 18,
-
     elevation: 12,
   },
 

@@ -1,265 +1,186 @@
-// Import optimized image component from Expo
+// Import the Image component from expo-image for optimized image rendering
 import { Image } from 'expo-image';
 
-// Import React Native components
-import {
-  StyleSheet,
-  Pressable,
-} from 'react-native';
+// Import React Native components for styling and touch interactions
+import { StyleSheet, Pressable } from 'react-native';
 
-// Import Expo Router navigation hook
+// Import Expo Router hook for navigation between screens
 import { useRouter } from 'expo-router';
 
-// Import React hooks
-import {
-  useEffect,
-  useState,
-} from 'react';
+// Import React hooks for lifecycle management and state handling
+import { useEffect, useState } from 'react';
 
-// Import Redux hook
+// Import Redux hook to access global application state
 import { useSelector } from 'react-redux';
 
-// Import Firebase authentication helper
+// Import Firebase authentication logout function
 import { logout } from '@/services/firebase-auth';
 
-// Import Firebase database helpers
-import {
-  getById,
-  getAll,
-} from '@/services/firebase-database';
+// Import Firebase database helper functions
+import { getById, getAll } from '@/services/firebase-database';
 
-// Import Redux store type
+// Import RootState type for Redux state typing
 import { RootState } from '@/services/store';
 
-// Import custom themed UI components
+// Import custom themed text component
 import { ThemedText } from '@/components/themed-text';
+
+// Import custom themed view component
 import { ThemedView } from '@/components/themed-view';
 
-// Import reusable icon component
+// Import custom icon component
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-/**
- * TabThreeScreen Component
- *
- * Profile screen displaying:
- * - User avatar
- * - Nickname
- * - User ID
- * - Artwork statistics
- * - Logout button
- */
+// Main profile screen component
 export default function TabThreeScreen() {
 
-  /**
-   * Expo Router instance
-   */
+  // Router instance used for navigation
   const router = useRouter();
 
-  /**
-   * Current authenticated user ID
-   * retrieved from Redux store.
-   */
-  const uid = useSelector(
-    (state: RootState) => state.user.uid
-  );
+  // Retrieve the current user's UID from Redux store
+  const uid = useSelector((state: RootState) => state.user.uid);
 
-  /**
-   * User nickname state
-   */
-  const [nickname, setNickname] =
-    useState('');
+  // State for storing user's nickname
+  const [nickname, setNickname] = useState('');
 
-  /**
-   * Number of artworks created by the user
-   */
-  const [artworksCount, setArtworksCount] =
-    useState(0);
+  // State for storing user's email
+  const [email, setEmail] = useState('');
+
+  // State for storing number of artworks created by the user
+  const [artworksCount, setArtworksCount] = useState(0);
 
   /**
    * Load user data when the component mounts
-   * or when the user ID changes.
+   * or when the UID changes.
    */
   useEffect(() => {
-
+    // Stop execution if no user is connected
     if (!uid) return;
 
+    // Fetch user information
     loadUserData();
-
   }, [uid]);
 
   /**
-   * loadUserData()
-   *
-   * Retrieves:
-   * - User profile information
-   * - Number of artworks uploaded
+   * Fetch user profile data and artworks count
+   * from Firebase database.
    */
   async function loadUserData() {
-
     try {
 
-      /**
-       * Retrieve user document
-       */
-      const user = await getById(
-        'users',
-        uid
-      );
+      // Retrieve user document by UID
+      const user = await getById('users', uid);
 
-      console.log(
-        'user from firebase:',
-        user
-      );
-
-      /**
-       * Update nickname if user exists
-       */
+      // If user exists, update local states
       if (user) {
-        setNickname(user.nickname);
+        setNickname(user.nickname ?? '');
+        setEmail(user.email ?? '');
       }
 
-      /**
-       * Retrieve all artworks
-       */
-      const allArtworks =
-        await getAll('artworks');
+      // Retrieve all artworks from database
+      const allArtworks = await getAll('artworks');
 
-      /**
-       * Filter artworks belonging
-       * to the current user
-       */
-      const userArtworks =
-        allArtworks.filter(
-          (a: any) => a.uid === uid
-        );
+      // Filter artworks belonging to the current user
+      const userArtworks = allArtworks.filter((a: any) => a.uid === uid);
 
-      /**
-       * Store artwork count
-       */
-      setArtworksCount(
-        userArtworks.length
-      );
+      // Store artworks count in state
+      setArtworksCount(userArtworks.length);
 
     } catch (err) {
 
-      console.error(
-        'Failed to load user data:',
-        err
-      );
+      // Log database loading errors
+      console.error('Failed to load user data:', err);
     }
   }
 
   /**
-   * handleLogout()
-   *
-   * Logs the user out
-   * and redirects to the home page.
+   * Handle user logout action.
    */
   const handleLogout = async () => {
-
     try {
 
-      // Firebase logout
+      // Disconnect the user from Firebase Authentication
       await logout();
 
-      // Redirect to authentication screen
+      // Redirect user to home/login screen
       router.replace('/');
 
     } catch (error) {
 
-      console.error(
-        'Logout error:',
-        error
-      );
+      // Log logout errors
+      console.error('Logout error:', error);
     }
   };
 
   return (
     <ThemedView style={styles.container}>
 
-      {/* HEADER */}
+      {/* Header section containing title and logout button */}
       <ThemedView style={styles.header}>
 
         {/* Screen title */}
-        <ThemedText type="title">
-          Profile
-        </ThemedText>
+        <ThemedText type="title">Profile</ThemedText>
 
         {/* Logout button */}
-        <Pressable
-          onPress={handleLogout}
-          style={styles.logoutBtn}
-        >
+        <Pressable onPress={handleLogout} style={styles.logoutBtn}>
+
+          {/* Logout icon */}
           <IconSymbol
             name="rectangle.portrait.and.arrow.right"
             size={20}
             color="#f72585"
           />
 
-          <ThemedText type="link">
-            Logout
-          </ThemedText>
+          {/* Logout text */}
+          <ThemedText type="link">Logout</ThemedText>
         </Pressable>
       </ThemedView>
 
-      {/* USER AVATAR */}
+      {/* User avatar image */}
       <Image
-        source={{
-          uri: 'https://i.pravatar.cc/300',
-        }}
+        source={{ uri: 'https://i.pravatar.cc/300' }}
         style={styles.avatar}
       />
 
-      {/* USERNAME */}
-      <ThemedText
-        type="title"
-        style={styles.name}
-      >
-        {nickname || 'Loading...'}
+      {/* Display user's nickname */}
+      <ThemedText type="title" style={styles.name}>
+        {nickname || 'Chargement...'}
       </ThemedText>
 
-      {/* USER ID / EMAIL */}
+      {/* Display user's email or UID */}
       <ThemedText style={styles.email}>
-        {uid}
+        {email || uid}
       </ThemedText>
 
-      {/* USER STATISTICS */}
+      {/* Statistics section */}
       <ThemedView style={styles.statsContainer}>
 
-        {/* Artwork statistics */}
+        {/* Artworks statistics box */}
         <ThemedView style={styles.statBox}>
 
-          <IconSymbol
-            name="camera.fill"
-            size={22}
-            color="#7209b7"
-          />
+          {/* Artwork icon */}
+          <IconSymbol name="camera.fill" size={22} color="#7209b7" />
 
+          {/* Number of artworks */}
           <ThemedText type="defaultSemiBold">
             {artworksCount}
           </ThemedText>
 
-          <ThemedText>
-            Artworks
-          </ThemedText>
+          {/* Label */}
+          <ThemedText>Artworks</ThemedText>
         </ThemedView>
 
-        {/* Likes statistics */}
+        {/* Likes statistics box */}
         <ThemedView style={styles.statBox}>
 
-          <IconSymbol
-            name="heart.fill"
-            size={22}
-            color="#f72585"
-          />
+          {/* Likes icon */}
+          <IconSymbol name="heart.fill" size={22} color="#f72585" />
 
-          <ThemedText type="defaultSemiBold">
-            0
-          </ThemedText>
+          {/* Number of likes */}
+          <ThemedText type="defaultSemiBold">0</ThemedText>
 
-          <ThemedText>
-            Likes
-          </ThemedText>
+          {/* Label */}
+          <ThemedText>Likes</ThemedText>
         </ThemedView>
       </ThemedView>
     </ThemedView>
@@ -271,89 +192,64 @@ export default function TabThreeScreen() {
  */
 const styles = StyleSheet.create({
 
-  /**
-   * Main container
-   */
+  // Main container style
   container: {
     flex: 1,
     padding: 20,
     gap: 20,
   },
 
-  /**
-   * Header section
-   */
+  // Header container style
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
 
-  /**
-   * Logout button container
-   */
+  // Logout button style
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
 
-  /**
-   * User avatar image
-   */
+  // User avatar style
   avatar: {
     width: 110,
     height: 110,
-
     borderRadius: 55,
-
     alignSelf: 'center',
-
     marginTop: 20,
-
     borderWidth: 3,
     borderColor: '#7209b7',
   },
 
-  /**
-   * Username text
-   */
+  // Username style
   name: {
     textAlign: 'center',
     marginTop: 10,
   },
 
-  /**
-   * User ID / email text
-   */
+  // Email style
   email: {
     textAlign: 'center',
     opacity: 0.6,
   },
 
-  /**
-   * Statistics container
-   */
+  // Statistics container style
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: 30,
   },
 
-  /**
-   * Statistics card
-   */
+  // Statistics card style
   statBox: {
     alignItems: 'center',
-
     gap: 6,
-
     padding: 15,
-
     borderRadius: 16,
-
     backgroundColor: '#f5f5f5',
-
     width: 120,
   },
 });
