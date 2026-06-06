@@ -1,6 +1,4 @@
-##Local StreetArt
-
---
+## Local StreetArt
 
 Design Document – Collaborative Street Art Mobile Application
 2nd Year CDA – Bachelor Web & Mobile Development (2026)
@@ -8,10 +6,9 @@ Design Document – Collaborative Street Art Mobile Application
 --
 
 ## Introduction
+## Project Overview
 
 --
-
-Project Overview
 
 As part of my work as an independent developer, I was contacted by Lisa, director of the ColorTown association, to participate in the development of an innovative mobile application.
 
@@ -23,7 +20,11 @@ The goal is to build a living database of often ephemeral artworks, accessible t
 
 Following the acquisition of public funding, the project has entered the development phase.
 
-Reformulation of Client Requirements
+--
+
+## Reformulation of Client Requirements
+
+--
 
 The ColorTown association wants to develop a mobile application called LocalStreetArt, allowing users to list and share street art pieces worldwide.
 
@@ -46,66 +47,85 @@ The application is developed using React Native (Expo) and uses Firebase for aut
 The goal is to deliver a simple, modern, and intuitive application that promotes cultural sharing.
 
 --
-##Features
---
+
+## Features
 
 User Management
-Account creation
+Creation of an account
 Login / logout
 Firebase authentication
+
 Artwork Management
 Browse published artworks
 Upload a new artwork
 Image upload
+
 Interactions
 Like artworks
 Display number of likes
+
 Mobile Features
 Camera usage (Expo Camera)
 Navigation between screens
 Responsive Android / iOS interface
+
 Database
 Firebase Authentication
 Firebase Firestore / Realtime Database
 Firebase Storage for images
+
 GitHub Project Link
 
-https://github.com/guinildoob755-sudo/local_street_art_GO
+-- https://github.com/guinildoob755-sudo/local_street_art_GO
+-- Repository: LocalStreetArt_GO
 
---
-## Repository: LocalStreetArt_GO
 --
 
 Interface Design
-Layout (Zoning)
+Zoning
 
 Zoning document available in the project resources.
+
+--
 
 Wireframes / Mockups
 
 Prototype created in Figma:
+-- LocalStreetArt Figma mockups (project link)
 
-LocalStreetArt Figma mockups (project link)
+--
+
 Application Visuals
 
 Visual assets are grouped in the dedicated design folder.
 
-Technical Watch (Research)
-Cross-platform React Native
+--
+
+Technical Watch
+React Native cross-platform
 Firebase best practices
 Mobile simulation (iOS / Android)
 Mobile authentication management
+
+--
+
 Technologies Used
+
 React Native (Expo)
 Firebase Auth
 Firebase Firestore
 Firebase Storage
 Expo Camera
 Expo Router
+
+--
+
 Author
 
 Project developed as part of the CDA Bachelor – Web & Mobile Development (2026)
 Developer: Yes.guy 🇦🇴
+
+--
 
 Project Objective
 
